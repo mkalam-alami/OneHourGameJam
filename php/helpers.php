@@ -49,9 +49,23 @@ function ordinal($number) {
 }
 
 function GetNextJamDateAndTime(){
-	global $dictionary;
+	global $dictionary, $dbConn;
 	
-	$saturday = strtotime("saturday +20 hours");
+  	// Display an event until 4 hours after its start time
+	$currentGmtTime = gmdate("Y-m-d H:i:s");
+	$sql = "SELECT jam_start_datetime FROM jam WHERE jam_deleted = 0 AND jam_start_datetime > DATE_SUB('$currentGmtTime', INTERVAL 4 HOUR) ORDER BY jam_start_datetime LIMIT 1";
+
+	$data = mysqli_query($dbConn, $sql);
+	$info = mysqli_fetch_array($data);
+
+	if ($info != null) {
+		$saturday = strtotime( $info['jam_start_datetime']);
+	}
+	else {
+		// Default to next saturday in case the jam is not created yet
+		$saturday = strtotime("saturday +20 hours");
+	}
+
 	$dictionary["next_jam_suggested_date"] = date("Y-m-d", $saturday);
 	$dictionary["next_jam_suggested_time"] = date("H:i", $saturday);
 	$now = time();
